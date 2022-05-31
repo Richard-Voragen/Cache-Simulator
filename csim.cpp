@@ -42,8 +42,9 @@ string CacheToString(vector<string> cache) {
     return output;
 }
 
-int Write(vector<string> &cache, string address, int setBits, int maxSetSize, int blockOffset, int &set, string &tag) {
-    set = convertToDecimal(address.substr(30-setBits, setBits));
+int Write(vector<string> &cache, string address, int setBits, int maxSetSize, int offset, int &blockOffset, int &set, string &tag) {
+    blockOffset = convertToDecimal(address.substr(30-offset, offset));
+    set = convertToDecimal(address.substr(30-setBits, setBits-offset));
     tag = to_string(convertToDecimal(address.substr(0, 30-setBits)));
     if (("," + cache[set]).find("," + tag + ",") != -1) return 1;
     if (count(cache[set].begin(), cache[set].end(), ',') < maxSetSize) cache[set] += tag + ",";
@@ -54,10 +55,10 @@ int Write(vector<string> &cache, string address, int setBits, int maxSetSize, in
     return 0;
 }
 
-void RunAnalysis(vector<string> inputs, int b) {
+void RunAnalysis(vector<string> inputs, int b, int words, int sets) {
     int originaladdress;
-    int hits = 0, blkoffs = 0;
-    vector<string> cache(16/b);
+    int hits = 0, blkoffs = words;
+    vector<string> cache(sets);
 
     for (int z = 1; z <= 2; z++) {
         hits = 0;
@@ -67,13 +68,13 @@ void RunAnalysis(vector<string> inputs, int b) {
             str >> hex >> originaladdress;
             int hit, set;
             string address = convertToBinary(originaladdress), tag;
-            hit = Write(cache, address, log2(16/b), b, 0, set, tag);
+            hit = Write(cache, address, log2(16/b), b, words, blkoffs, set, tag);
             hits += hit;
-            cout << "Address:" << i << "\t"
-                 << "BlkOfs:" << blkoffs << "\t"
+            cout << "Address:" << i << "\t\t"
+                 << "BlkOfs:" << blkoffs << "\t\t"
                  << "Set:" << set << "\t"
                  << "Tag:" << tag << "\t"
-                 << "Hit:" << (hit ? "true":"false") << "\t"
+                 << "Hit:" << (hit ? "true":"false") << "\t\t"
                  << "Cache:" << CacheToString(cache) << endl;
         }
         int hitsstr = (double)hits/inputs.size() * 100;
@@ -83,16 +84,23 @@ void RunAnalysis(vector<string> inputs, int b) {
 }
 
 int main() {
+    vector<string> s1 = {"40", "44", "48", "4c", "70", "74", "78", "7c", "80", "84", "88", "8c", "90", "94", "98", "9c", "0", "4", "8", "c", "10", "14", "18", "1c", "20"};
     cout << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" << endl;
     cout << "Problem 8.9a" << endl;
-    vector<string> s = {"40", "44", "48", "4C", "70", "74", "78", "7C", "80", "84", "88", "8C", "90", "94", "98", "9C", "0", "4", "8", "C", "10", "14", "18", "1C", "20"};
-    RunAnalysis(s, 1);
+    RunAnalysis(s1, 1, 0, 16);
 
     cout << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" << endl;
     cout << "Problem 8.9b" << endl;
-    RunAnalysis(s, 16);
+    RunAnalysis(s1, 16, 0, 1);
 
     cout << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" << endl;
     cout << "Problem 8.9c" << endl;
-    RunAnalysis(s, 2);
+    RunAnalysis(s1, 2, 0, 8);
+
+    cout << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" << endl;
+    cout << "Problem 8.9d" << endl;
+    RunAnalysis(s1, 1, 1, 8);
+
+    vector<string> s2 = {"74", "A0", "78", "38C", "AC", "84", "88", "8C", "7C", "34", "38", "13C", "388", "18C"};
+
 }
